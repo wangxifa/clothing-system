@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/clothing-system/static/css/main.bf9b98ef.chunk.css",
+    "main.js": "/clothing-system/static/js/main.ddebf981.chunk.js",
+    "main.js.map": "/clothing-system/static/js/main.ddebf981.chunk.js.map",
+    "runtime-main.js": "/clothing-system/static/js/runtime-main.90ee3250.js",
+    "runtime-main.js.map": "/clothing-system/static/js/runtime-main.90ee3250.js.map",
+    "static/css/2.015dc0ab.chunk.css": "/clothing-system/static/css/2.015dc0ab.chunk.css",
+    "static/js/2.af30efc2.chunk.js": "/clothing-system/static/js/2.af30efc2.chunk.js",
+    "static/js/2.af30efc2.chunk.js.map": "/clothing-system/static/js/2.af30efc2.chunk.js.map",
+    "static/js/3.e2f96605.chunk.js": "/clothing-system/static/js/3.e2f96605.chunk.js",
+    "static/js/3.e2f96605.chunk.js.map": "/clothing-system/static/js/3.e2f96605.chunk.js.map",
+    "index.html": "/clothing-system/index.html",
+    "static/css/2.015dc0ab.chunk.css.map": "/clothing-system/static/css/2.015dc0ab.chunk.css.map",
+    "static/css/main.bf9b98ef.chunk.css.map": "/clothing-system/static/css/main.bf9b98ef.chunk.css.map",
+    "static/js/2.af30efc2.chunk.js.LICENSE.txt": "/clothing-system/static/js/2.af30efc2.chunk.js.LICENSE.txt",
+    "static/media/example.40b8846e.xlsx": "/clothing-system/static/media/example.40b8846e.xlsx"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.90ee3250.js",
+    "static/css/2.015dc0ab.chunk.css",
+    "static/js/2.af30efc2.chunk.js",
+    "static/css/main.bf9b98ef.chunk.css",
+    "static/js/main.ddebf981.chunk.js"
+  ]
+}
