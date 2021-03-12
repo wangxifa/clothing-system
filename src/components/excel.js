@@ -1,19 +1,24 @@
-import { useState } from 'react';
-import { message, Table, Button, Space } from 'antd';
+import { useState, useRef } from 'react';
+import { Alert, message, Table, Button, Space, Input } from 'antd';
 import ClothDrawer from './clothDrawer';
+// import Highlighter from 'react-highlight-words';
+import { SearchOutlined } from '@ant-design/icons';
+import { getSum } from '../utils';
+import example from '../assets/example.xlsx'
 // import { UploadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import './styles.css';
 
 const Excel = () => {
-    const [dataSource, setDataSource] = useState([]);
+    const searchInputRef = useRef();
+    const [dataSource, setDataSource] = useState(
+      (sessionStorage.getItem("clothingData") && JSON.parse(sessionStorage.getItem("clothingData"))) || []
+    );
     const [visible, setVisible] = useState(false);
     const [title, setTitle] = useState("新增");
     const [obj, setObj] = useState(null);
     const [index, setIndex] = useState(0);
-
-    
-
+   
     // XLSX.utils.sheet_to_csv：生成CSV格式
     // XLSX.utils.sheet_to_txt：生成纯文本格式
     // XLSX.utils.sheet_to_html：生成HTML格式
@@ -23,10 +28,9 @@ const Excel = () => {
       const sheetNames = workbook.SheetNames; // 工作表名称集合
       const worksheet = workbook.Sheets[sheetNames[0]]; // 这里我们只读取第一张sheet
       const json = XLSX.utils.sheet_to_json(worksheet);
-      // transferJson(json)
-      
-    
-      setDataSource(json)
+     
+      const data = getSum(json);
+      setDataSource(data)
     }
 
     const readWorkbookFromLocalFile = (file, callback) => {
@@ -109,8 +113,9 @@ const Excel = () => {
     const changeDataSource = (data) => {
       if (title === '新增') {
         const _arr = JSON.parse(JSON.stringify(dataSource));
-        _arr.unshift(data);
-        setDataSource(_arr);
+        _arr.push(data);
+        const _data = getSum(_arr);
+        setDataSource(_data);
       } else if (title === '入库') {
         const _arr = JSON.parse(JSON.stringify(dataSource));
         const val = _arr[index]
@@ -122,8 +127,12 @@ const Excel = () => {
           val['2XL'] = val['2XL'] + data['2XL'];
           val['3XL'] = val['3XL'] + data['3XL'];
           val['4XL'] = val['4XL'] + data['4XL'];
+          // val['合计'] = val.S + val.M + val.L + val.XL + val['2XL'] + val['3XL'] + val['4XL'];
+          // console.log(val);
         }
-        setDataSource(_arr);
+        
+        const _data = getSum(_arr);
+        setDataSource(_data);
       } else if (title === '出库') {
         const _arr = JSON.parse(JSON.stringify(dataSource));
         const val = _arr[index]
@@ -135,8 +144,10 @@ const Excel = () => {
           val['2XL'] = val['2XL'] - data['2XL'];
           val['3XL'] = val['3XL'] - data['3XL'];
           val['4XL'] = val['4XL'] - data['4XL'];
+          // val['合计'] = val.S + val.M + val.L + val.XL + val['2XL'] + val['3XL'] + val['4XL'];
         }
-        setDataSource(_arr);
+        const _data = getSum(_arr);
+        setDataSource(_data);
       } 
     }
 
@@ -156,16 +167,67 @@ const Excel = () => {
       setIndex(index)
     }
 
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+      confirm();
+      // setSearchText(selectedKeys[0])
+    };
+  
+    const handleReset = clearFilters => {
+      clearFilters();
+    };
+
+    const getColumnSearchProps = dataIndex => ({
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            ref={searchInputRef}
+            placeholder={`搜索 ${dataIndex}`}
+            value={selectedKeys[0]}
+            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+              style={{ width: 90 }}
+            >
+              搜索
+            </Button>
+            <Button onClick={() => handleReset(clearFilters)} style={{ width: 90 }}>
+              重置
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record) =>
+        record[dataIndex]
+          ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+          : '',
+      onFilterDropdownVisibleChange: visible => {
+        if (visible && searchInputRef.current) {
+          setTimeout(() => searchInputRef.current.select(), 100);
+        }
+      },
+    });
+ 
     const columns = [
       {
         title: '款号',
         dataIndex: '款号',
         key: '款号',
+        width: 200,
+        fixed: 'left',
+        ...getColumnSearchProps('款号'),
       },
       {
         title: '颜色',
         dataIndex: '颜色',
         key: '颜色',
+        width: 100,
+        ...getColumnSearchProps('颜色'),
       },
       {
         title: 'S',
@@ -227,24 +289,35 @@ const Excel = () => {
         title: '合计',
         dataIndex: '合计',
         key: '合计',
-        render: (text, row) => {
-         return (
-          <span>
-            {row.S +row.M + row.XL + row.L +row['2XL'] + row['3XL'] + row['4XL'] }
-          </span>
-         )
-        }
+        sorter: {
+          compare: (a, b) => a['4XL'] - b['4XL'],
+        },
+        // render: (text, row) => {
+        //  return (
+        //   <span>
+        //     {row.S +row.M + row.XL + row.L +row['2XL'] + row['3XL'] + row['4XL'] }
+        //   </span>
+        //  )
+        // }
       },
       {
         title: '操作',
         dataIndex: '出入库',
         key: '出入库',
+        fixed: 'right',
+        width: 200,
         render: (text, row, index) => {
           return (
-            <Space>
-              <Button onClick={() => Warehousing(row, index)} type="primary">入库</Button>
-              <Button onClick={() => Delivery(row, index)} type="primary">出库</Button>
-            </Space>
+            <>
+              {
+                row['款号'] !== '统计' && (
+                <Space>
+                  <Button onClick={() => Warehousing(row, index)} type="primary">入库</Button>
+                  <Button onClick={() => Delivery(row, index)} type="primary">出库</Button>
+                </Space>
+                )
+              }
+            </>
           )
          }
       },
@@ -252,13 +325,20 @@ const Excel = () => {
 
     return (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <input type='file' accept='.xlsx, .xls' onChange={(e) => readWorkbookFromLocalFile(e)}  />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <Space>
+              <input type='file' accept='.xlsx, .xls' onChange={(e) => readWorkbookFromLocalFile(e)}  />
+            </Space>
+
+            <Space>
+              <Button>
+                <a href={example} download="导入模版示例.xlsx">下载模版</a>
+              </Button>
               <Button type="primary" onClick={openDrawer}>新增</Button>
               <Button onClick={openDownload}>导出</Button>
             </Space>
           </div>
+          <Alert message="使用前请先下载模版，按照模版格式填写数据，尺码必须填写数字" type="info" showIcon closable />
           {
             <div style={{ background: '#fff', padding: 12, marginTop: 24 }}>
               <Table 
@@ -267,6 +347,7 @@ const Excel = () => {
                 pagination= {{
                   pageSize: 99999
                 }}
+                scroll={{ x: 1400 }}
                 rowKey={record => record.__rowNum__ + record['款号'] + record['颜色']}
               />
             </div>
